@@ -30,10 +30,10 @@
     el: '#app',
     //language=HTML
     template: `
-      <div class="container mx-auto px-4 py-8 md:p-12">
-        <section>
-          <div class="mb-2 flex items-center">
-            Metamask:
+      <div class="container mx-auto px-4 py-8 md:p-10">
+        <section class="flex flex-col lg:flex-row">
+          <div class="mb-2 mr-8 flex items-center">
+              Metamask:
             <el-tag
               effect="dark"
               size="small"
@@ -43,15 +43,26 @@
               {{ metamaskInstalled ? "installed" : "disabled" }}
             </el-tag>
           </div>
-          <div>
-                    <span v-if="!account && metamaskInstalled">
-                        <el-button @click="handleConnect"
-                                   size="mini"
-                                   type="primary"
-                                   plain>
-                            Connect
-                        </el-button>
-                    </span>
+          <div class="mb-2 mr-8 flex items-center">
+            Chain ID:
+              <el-tag
+                effect="dark"
+                size="small"
+                class="ml-2"
+                type="info"
+              >
+                {{ chainId }}
+              </el-tag>
+            </div>
+          <div class="mb-2 mr-8">
+            <span v-if="!account && metamaskInstalled">
+              <el-button @click="handleConnect"
+                         size="mini"
+                         type="primary"
+                         plain>
+                Connect
+              </el-button>
+            </span>
             <div v-else
                  class="flex items-center">
               Logged in as:
@@ -65,7 +76,7 @@
           </div>
         </section>
         <el-divider></el-divider>
-        <section>
+        <section class="mt-10">
           <h1 class="text-lg font-bold mb-2">Send Transaction</h1>
           <el-form :rules="form1Rules"
                    :model="form1"
@@ -130,6 +141,7 @@
         },
         web3: null,
         account: "",
+        chainId: '',
         loading: null,
         env: {
           dialogVisible: false
@@ -199,8 +211,12 @@
       if (this.metamaskInstalled) {
         this.web3 = new Web3(window.ethereum);
         this.account = (await this.web3.eth.getAccounts())[0]
+        this.chainId = await this.web3.eth.getChainId()
         window.ethereum.on('accountsChanged', (accounts) => {
           this.account = accounts[0]
+        });
+        window.ethereum.on('chainChanged', (chainId) => {
+          this.chainId = this.web3.utils.hexToNumber(chainId)
         });
       }
     }
