@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Metamask Demo</title>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/element-ui/2.15.2/theme-chalk/index.min.css"
+          integrity="sha512-7j0xq+2GMPtO/l8eUz2t0raRmZOqQ0HjM+Qojori84/HQryoRM9QD/8icsGYn3GcTF05kojc9fmDn9N1886iKw=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.1.2/tailwind.min.css"
+          integrity="sha512-RntatPOhEcQEA81gC/esYoCkGkL7AYV7TeTPoU+R9zE44/yWxVvLIBfBSaMu78rhoDd73ZeRHXRJN5+aPEK53Q=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer" />
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.3.5/web3.min.js"
+            integrity="sha512-S/O+gH5szs/+/dUylm15Jp/JZJsIoWlpSVMwT6yAS4Rh7kazaRUxSzFBwnqE2/jBphcr7xovTQJaopiEZAzi+A=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/element-ui/2.15.2/index.min.js"
+            integrity="sha512-uSWA9edv4Suj91akT6cCeYh9uEcQtQkFCu7y++nf9ADwO3kBAdTcmQwYka7eyNItpqdzjLmp3r37MnXpLqJusg=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"></script>
+</head>
+<body>
+<div id="app"
+     class="container mx-auto px-4 py-8 md:p-12">
+    <section>
+        <div class="mb-2 flex items-center">
+            Metamask:
+            <el-tag
+                effect="dark"
+                size="small"
+                class="ml-2"
+                :type="metamaskInstalled ? 'success' : 'danger'"
+            >
+                {{ metamaskInstalled ? "installed" : "disabled" }}
+            </el-tag>
+        </div>
+        <div>
+        <span v-if="!account && metamaskInstalled">
+          <el-button @click="handleConnect"
+                     size="mini"
+                     type="primary"
+                     plain>
+            Connect
+          </el-button>
+        </span>
+            <div v-else
+                 class="flex items-center">
+                Logged in as:
+                <el-tag effect="dark"
+                        type="info"
+                        size="small"
+                        class="ml-2">
+                    {{ account }}
+                </el-tag>
+            </div>
+        </div>
+    </section>
+    <el-divider></el-divider>
+    <section>
+        <h1 class="text-lg font-bold mb-2">Send Transaction</h1>
+        <el-form :rules="form1Rules"
+                 :model="form1"
+                 ref="form1">
+            <el-form-item label="Contract Address"
+                          prop="contractAddress">
+                <el-input v-model="form1.contractAddress"></el-input>
+            </el-form-item>
+            <el-form-item label="Encoded Data"
+                          prop="encodedData">
+                <el-input type="textarea"
+                          :rows="4"
+                          v-model="form1.encodedData"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary"
+                           @click="handleSendTransaction">Submit
+                </el-button>
+            </el-form-item>
+        </el-form>
+    </section>
+    <el-divider></el-divider>
+    <section>
+        <h1 class="text-lg font-bold mb-2">Sign</h1>
+        <el-form :model="form2"
+                 :rules="form2Rules"
+                 ref="form2">
+            <el-form-item label="Message"
+                          prop="message">
+                <el-input type="textarea"
+                          :rows="4"
+                          v-model="form2.message"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary"
+                           @click="handleSign">Submit
+                </el-button>
+            </el-form-item>
+        </el-form>
+    </section>
+    <el-dialog :visible.sync="env.dialogVisible"
+               title="Signed Data">
+        <code>{{signedData}}</code>
+    </el-dialog>
+</div>
+<script>
+  new Vue({
+    el: '#app',
+    data() {
+      return {
+        form1: {
+          contractAddress: "",
+          encodedData: ""
+        },
+        form1Rules: {
+          contractAddress: [{required: true, message: 'Contract address is required'}],
+          encodedData: [{required: true, message: 'Encoded data is required'}],
+        },
+        form2: {
+          message: ""
+        },
+        form2Rules: {
+          message: [{required: true, message: 'Message is required'}],
+        },
+        web3: null,
+        account: "",
+        loading: null,
+        env: {
+          dialogVisible: false
+        },
+        signedData: ''
+      }
+    },
+    computed: {
+      metamaskInstalled() {
+        return !!window.ethereum;
+      }
+    },
+    methods: {
+      async handleConnect() {
+        if (this.metamaskInstalled) {
+          this.account = (await this.web3.eth.requestAccounts())[0]
+        }
+      },
+      toggleLoading(bool, message) {
+        if (bool) {
+          this.loading = this.$loading({
+            lock: true,
+            text: message,
+            spinner: 'el-icon-loading',
+            background: 'rgba(0, 0, 0, 0.7)'
+          });
+        } else {
+          this.loading.close()
+        }
+      },
+      async handleSendTransaction() {
+        try {
+          await this.$refs.form1.validate()
+          this.web3.eth.sendTransaction({
+            from: this.account,
+            to: this.form1.contractAddress,
+            data: this.form1.encodedData
+          }).on('transactionHash', tx => {
+            this.toggleLoading(true, 'Waiting for transaction to complete')
+          }).on('receipt', receipt => {
+            this.toggleLoading(false)
+            this.$notify({
+              title: 'Success',
+              type: 'success',
+              message: 'Transaction completed, please go to metamask to review your transaction'
+            });
+          }).on('error', err => {
+            this.$notify({
+              title: 'Failed',
+              type: 'error',
+              message: err.message
+            })
+          })
+        } catch (err) {
+        }
+      },
+      async handleSign() {
+        try {
+          await this.$refs.form2.validate()
+          this.signedData = await this.web3.eth.personal.sign(this.form2.message, this.account)
+          this.env.dialogVisible = true
+        } catch (error) {
+        }
+      }
+    },
+    async created() {
+      if (this.metamaskInstalled) {
+        this.web3 = new Web3(window.ethereum);
+        this.account = (await this.web3.eth.getAccounts())[0]
+        window.ethereum.on('accountsChanged', (accounts) => {
+          this.account = accounts[0]
+        });
+      }
+    }
+  })
+</script>
+</body>
+</html>
