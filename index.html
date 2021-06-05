@@ -40,7 +40,7 @@
               class="ml-2"
               :type="metamaskInstalled ? 'success' : 'danger'"
             >
-              {{ metamaskInstalled ? "installed" : "disabled" }}
+              {{ metamaskInstalled ? "Enabled" : "Disabled" }}
             </el-tag>
           </div>
           <div class="mb-2 mr-8 flex items-center">
@@ -51,7 +51,7 @@
               class="ml-2"
               type="info"
             >
-              {{ chainId }}
+              {{ chainId || 'N/A' }}
             </el-tag>
           </div>
           <div class="mb-2 mr-8 flex items-center">
@@ -64,13 +64,13 @@
                            plain>
                   Connect
               </el-button>
-              </span>
+            </span>
             <el-tag effect="dark"
                     v-else
                     type="info"
                     size="small"
                     class="ml-2">
-              {{ account }}
+              {{ account || 'N/A' }}
             </el-tag>
           </div>
         </section>
