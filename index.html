@@ -30,7 +30,7 @@
     el: '#app',
     //language=HTML
     template: `
-      <div class="container mx-auto px-4 py-8 md:p-10">
+      <div class="lg:container mx-auto px-4 py-8">
         <section class="flex flex-col lg:flex-row">
           <div class="mb-2 mr-8 flex items-center">
             Metamask:
@@ -55,7 +55,7 @@
             </el-tag>
           </div>
           <div class="mb-2 mr-8 flex items-center">
-            Logged in as:
+            Account:
             <span v-if="!account && metamaskInstalled">
                 <el-button @click="handleConnect"
                            size="mini"
