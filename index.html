@@ -90,6 +90,10 @@
                         :rows="4"
                         v-model="form1.encodedData"></el-input>
             </el-form-item>
+            <el-form-item label="Value (in ether)"
+                          prop="value">
+              <el-input v-model="form1.value"></el-input>
+            </el-form-item>
             <el-form-item>
               <el-button type="primary"
                          @click="handleSendTransaction">Submit
@@ -126,7 +130,8 @@
       return {
         form1: {
           contractAddress: "",
-          encodedData: ""
+          encodedData: "",
+          value: ""
         },
         form1Rules: {
           contractAddress: [{required: true, message: 'Contract address is required'}],
@@ -177,6 +182,7 @@
           this.web3.eth.sendTransaction({
             from: this.account,
             to: this.form1.contractAddress,
+            value: this.web3.utils.toWei(this.form1.value.toString() || '0'),
             data: this.form1.encodedData
           }).on('transactionHash', tx => {
             this.toggleLoading(true, 'Waiting for transaction to complete')
